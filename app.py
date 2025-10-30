@@ -131,7 +131,7 @@ def send_request_sync(payload):
         keys_to_try = list(API_KEYS)
         for _ in range(len(keys_to_try)):
             key = next(API_KEY_CYCLE)
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image-preview:generateContent?key={key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key={key}"
             try:
                 response = requests.post(url, headers=headers, json=payload, timeout=300)
                 
