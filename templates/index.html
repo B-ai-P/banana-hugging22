@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>잼나나 급식소</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app">
+        <!-- 사이드바 -->
+        <div class="sidebar" id="sidebar">
+            <!-- 접기 버튼 추가 -->
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <span>‹</span>
+            </button>
+            
+            <div class="logo">
+                <h1>잼나나 급식소</h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="/gallery" class="nav-item">
+                    <span class="nav-icon">🖼️</span>
+                    <span class="nav-text">챗붕이들 이미지</span>
+                </a>
+                <a href="/" class="nav-item active">
+                    <span class="nav-icon">✨</span>
+                    <span class="nav-text">생성</span>
+                </a>
+            </nav>
+        
+            <!-- 로그아웃 버튼 - 사이드바 맨 아래 -->
+            <div class="sidebar-footer">
+                <a href="/logout" class="logout-btn">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">로그아웃</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 사이드바 열기 버튼 -->
+        <button class="sidebar-open-btn" id="sidebarOpenBtn" style="display: none;">
+            <span>›</span>
+        </button>
+
+        <!-- 메인 콘텐츠 -->
+        <div class="main-content" id="mainContent">
+            <div class="content-area">
+                <div class="welcome-section">
+                    <h2>AI 이미지 생성</h2>
+                    <p>원하는 이미지를 설명해보세요. 최대 2개의 참고 이미지도 함께 업로드할 수 있습니다.</p>
+                    
+                    <div class="guide-section">
+                        <h3>📋 사용 가이드 필독</h3>
+                        <ul>
+                            <li>⚠️ 오류가 발생시 99% 확률로 Gemini상태가 좆이라서 그렇습니다 OR 검열.</li>
+                            <li>💡 "바나나 만들어줘" 라고해서 오류가나면 Gemini는 계속해서 똑같은 오류답변만 뱉기때문에 프롬프트를 수정하세요.</li>
+                            <li>🎨 예시: ("바나나 만들어줘" = error) 수정하세요 -> ("바나나 만들어줘~~~~~~" = OK)</li>
+                            <li>💬 들리는 얘기로는 영어로 지시하는게 더 효과적이라고 합니다. 오류가나면 계속 오류가 나지않을때까지 수정해서 요청하세요.</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- 이미지 생성 폼 -->
+                <form id="imageForm" class="generate-form" enctype="multipart/form-data">
+                    <div class="input-container">
+                        <div class="prompt-input-wrapper">
+                            <textarea 
+                                id="prompt" 
+                                name="prompt" 
+                                placeholder="이미지 프롬프트를 입력하세요..."
+                                required
+                                rows="4"
+                            ></textarea>
+                            
+                            <div class="input-actions">
+                                <div class="file-upload-section">
+                                    <!-- 복사붙여넣기 안내를 +버튼 자리에 -->
+                                    <div class="paste-instruction">
+                                        <p>💡 <strong>팁:</strong> 이미지를 복사한 후 <kbd>Ctrl+V</kbd>로 붙여넣을 수 있습니다!</p>
+                                    </div>
+                                    
+                                    <!-- 항상 보이는 첨부 파일들 -->
+                                    <div class="file-uploads" id="fileUploads">
+                                        <div class="file-upload-item">
+                                            <div class="drop-zone" data-target="1" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+                                                <label for="image1" class="file-upload-label">
+                                                    <span>첨부 1</span>
+                                                    <div class="drop-instruction">
+                                                        <p>📁 파일을 선택하거나</p>
+                                                        <p>🖱️ 드래그해서 놓아주세요</p>
+                                                    </div>
+                                                    <input type="file" id="image1" name="image1" accept="image/*" onchange="previewImage(this, 'preview1')">
+                                                </label>
+                                                <div id="preview1" class="image-preview"></div>
+                                                <button type="button" class="remove-image" onclick="removeImage(1)" style="display: none;">×</button>
+                                            </div>
+                                        </div>
+                                        <div class="file-upload-item">
+                                            <div class="drop-zone" data-target="2" ondragover="handleDragOver(event)" ondrop="handleDrop(event)">
+                                                <label for="image2" class="file-upload-label">
+                                                    <span>첨부 2</span>
+                                                    <div class="drop-instruction">
+                                                        <p>📁 파일을 선택하거나</p>
+                                                        <p>🖱️ 드래그해서 놓아주세요</p>
+                                                    </div>
+                                                    <input type="file" id="image2" name="image2" accept="image/*" onchange="previewImage(this, 'preview2')">
+                                                </label>
+                                                <div id="preview2" class="image-preview"></div>
+                                                <button type="button" class="remove-image" onclick="removeImage(2)" style="display: none;">×</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="generate-side">
+                                    <button type="submit" id="generateBtn" class="generate-btn">
+                                        <span>생성하기</span>
+                                    </button>
+                                    <div class="aspect-ratio-selector" id="aspectSelector">
+                                        <button type="button" class="aspect-toggle" id="aspectToggle">크기: Auto</button>
+                                        <ul class="aspect-menu" id="aspectMenu">
+                                            <li data-value="auto">Auto</li>
+                                            <li data-value="1:1">1:1</li>
+                                            <li data-value="2:3">2:3</li>
+                                            <li data-value="3:2">3:2</li>
+                                            <li data-value="3:4">3:4</li>
+                                            <li data-value="4:3">4:3</li>
+                                            <li data-value="4:5">4:5</li>
+                                            <li data-value="5:4">5:4</li>
+                                            <li data-value="9:16">9:16</li>
+                                            <li data-value="16:9">16:9</li>
+                                            <li data-value="21:9">21:9</li>
+                                        </ul>
+                                        <input type="hidden" id="aspect_ratio" name="aspect_ratio" value="">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- 로딩 상태 -->
+                <div id="loading" class="loading-section hidden">
+                    <div class="loading-spinner"></div>
+                    <p>AI가 이미지를 생성하고 있습니다...</p>
+                </div>
+
+                <!-- 결과 -->
+                <div id="result" class="result-section hidden">
+                    <div class="result-container">
+                        <div class="result-image">
+                            <img id="resultImage" src="" alt="생성된 이미지">
+                        </div>
+                        <div class="result-info">
+                            <h3>생성 완료!</h3>
+                            <p id="resultText"></p>
+                            <div class="result-actions">
+                                <button onclick="location.href='/gallery'" class="view-gallery-btn">
+                                    갤러리에서 확인하기
+                                </button>
+                                <button onclick="resetForm()" class="create-again-btn">
+                                    다시 생성하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>챗붕이들 이미지 - 잼나나 급식소</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app">
+        <!-- 사이드바 -->
+        <div class="sidebar" id="sidebar">
+            <!-- 사이드바 접기 버튼 -->
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <span>‹</span>
+            </button>
+            
+            <div class="logo">
+                <h1>잼나나 급식소</h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="/gallery" class="nav-item active">
+                    <span class="nav-icon">🖼️</span>
+                    <span class="nav-text">챗붕이들 이미지</span>
+                </a>
+                <a href="/" class="nav-item">
+                    <span class="nav-icon">✨</span>
+                    <span class="nav-text">생성</span>
+                </a>
+            </nav>
+        
+            <!-- 어드민 패널을 로그아웃 버튼 위에 추가 -->
+            <div class="admin-panel-fixed" id="adminPanelFixed" style="display: none;">
+                <div class="admin-controls-fixed">
+                    <button id="selectModeBtn" class="admin-btn-fixed">다중선택</button>
+                    <button id="deleteSelectedBtn" class="admin-btn-fixed delete-btn" style="display: none;">선택삭제</button>
+                    <button id="cancelSelectBtn" class="admin-btn-fixed cancel-btn" style="display: none;">선택취소</button>
+                    <div id="selectedCount" class="selected-count-fixed" style="display: none;">0개 선택</div>
+                </div>
+            </div>
+        
+            <!-- 로그아웃 버튼 -->
+            <div class="sidebar-footer">
+                <a href="/logout" class="logout-btn">
+                    <span class="nav-icon">🚪</span>
+                    <span class="nav-text">로그아웃</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- 사이드바 닫힘 상태일 때 열기 버튼 -->
+        <button class="sidebar-open-btn" id="sidebarOpenBtn" style="display: none;">
+            <span>›</span>
+        </button>
+
+        <!-- 메인 콘텐츠 -->
+        <div class="main-content">
+            <div class="content-area">
+                <!-- 헤더 -->
+                <div class="gallery-header">
+                    <h2>챗붕이들의 작품</h2>
+                    <div class="sort-controls">
+                        <button class="sort-btn active" data-sort="newest">최신순</button>
+                        <button class="sort-btn" data-sort="oldest">오래된순</button>
+                        <button class="sort-btn" data-sort="likes">좋아요순</button>
+                    </div>
+                </div>
+
+                <!-- 마소너리 갤러리 -->
+                <div class="masonry-gallery" id="gallery">
+                    <!-- 이미지들이 여기에 동적으로 추가됩니다 -->
+                </div>
+
+                <!-- 로딩 인디케이터 -->
+                <div id="loadingMore" class="loading-more hidden">
+                    <div class="loading-spinner-small"></div>
+                    <p>더 많은 이미지를 불러오는 중...</p>
+                </div>
+
+                <!-- 빈 갤러리 -->
+                <div id="emptyGallery" class="empty-gallery hidden">
+                    <div class="empty-content">
+                        <h3>아직 생성된 이미지가 없습니다</h3>
+                        <p>첫 번째 이미지를 만들어보세요!</p>
+                        <a href="/" class="create-first-btn">이미지 생성하기</a>
+                    </div>
+                </div>
+
+                <!-- 끝까지 도달 메시지 -->
+                <div id="endMessage" class="end-message hidden">
+                    <p>🎉 모든 이미지를 확인했습니다!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 모달 -->
+    <div id="imageModal" class="modal">
+        <div class="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            
+            <div class="modal-body">
+                <div class="modal-left">
+                    <img id="modalImage" src="" alt="상세 이미지">
+                </div>
+                
+                <div class="modal-right">
+                    <div class="modal-header">
+                        <span id="modalDate" class="creation-date"></span>
+                        <div class="modal-like-section">
+                            <span class="like-text">마음에 드셨다면 하트</span>
+                            <button id="likeBtn" class="like-btn-large" onclick="likeImage()">
+                                ❤️ <span id="likeCount">0</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="conversation">
+                        <div class="message user-message">
+                            <div class="message-header">
+                                <span class="author">👤 사용자</span>
+                            </div>
+                            <div class="message-content">
+                                <p id="modalPrompt"></p>
+                                <div id="modalImages" class="attached-images"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="message ai-message">
+                            <div class="message-header">
+                                <span class="author">🤖 Gemini</span>
+                            </div>
+                            <div class="message-content">
+                                <p id="modalResponse"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 삭제 확인 모달 -->
+    <div id="deleteModal" class="delete-modal" style="display: none;">
+        <div class="delete-modal-content">
+            <h3>이미지 삭제</h3>
+            <p><span id="deleteCount">0</span>개의 이미지를 삭제하시겠습니까?</p>
+            
+            <div class="delete-options">
+                <label>
+                    <input type="radio" name="deleteOption" value="delete_only" checked>
+                    이미지만 삭제
+                </label>
+                <label>
+                    <input type="radio" name="deleteOption" value="delete_and_ban">
+                    이미지 삭제 + 제작자 IP 영구 차단
+                </label>
+            </div>
+            
+            <div class="delete-modal-buttons">
+                <button id="confirmDeleteBtn" class="delete-confirm-btn">삭제 실행</button>
+                <button id="cancelDeleteBtn" class="cancel-btn">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='gallery.js') }}"></script>
+</body>
+</html>
