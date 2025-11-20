@@ -338,8 +338,7 @@ def generate_image():
             "temperature": 1,
             "topP": 0.95,
             "maxOutputTokens": 32768,
-            "responseModalities": ["IMAGE"],
-            "outputMimeType": "image/png"
+            "responseModalities": ["IMAGE"]
         }
         
         # ImageConfig 설정
