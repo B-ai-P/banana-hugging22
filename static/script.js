@@ -175,6 +175,11 @@ function handleDrop(e) {
     const dropZone = e.currentTarget;
     dropZone.classList.remove('drag-over');
     
+    // 드래그 오버레이 숨기기 (버그 수정)
+    if (dragOverlay) {
+        dragOverlay.classList.remove('show');
+    }
+    
     const files = e.dataTransfer.files;
     const targetSlot = parseInt(dropZone.dataset.target);
     
@@ -381,6 +386,44 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('click', function(e) {
         if (!aspectSelector.contains(e.target)) {
             aspectSelector.classList.remove('open');
+        }
+    });
+});
+
+// 이미지 사이즈 선택 UI
+document.addEventListener('DOMContentLoaded', function() {
+    const imageSizeSelector = document.getElementById('imageSizeSelector');
+    const imageSizeToggle = document.getElementById('imageSizeToggle');
+    const imageSizeMenu = document.getElementById('imageSizeMenu');
+    const imageSizeInput = document.getElementById('image_size');
+
+    if (!imageSizeSelector || !imageSizeToggle || !imageSizeMenu || !imageSizeInput) return;
+
+    // 기본값: 1K
+    imageSizeInput.value = '1K';
+    imageSizeToggle.textContent = '해상도: 1K';
+
+    // 토글 버튼 클릭 시 메뉴 열기/닫기
+    imageSizeToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        imageSizeSelector.classList.toggle('open');
+    });
+
+    // 리스트 항목 클릭 시 값 반영
+    imageSizeMenu.addEventListener('click', function(e) {
+        const item = e.target.closest('li');
+        if (!item) return;
+        const value = item.dataset.value;
+
+        imageSizeInput.value = value;
+        imageSizeToggle.textContent = '해상도: ' + value;
+        imageSizeSelector.classList.remove('open');
+    });
+
+    // 바깥 클릭 시 닫기
+    document.addEventListener('click', function(e) {
+        if (!imageSizeSelector.contains(e.target)) {
+            imageSizeSelector.classList.remove('open');
         }
     });
 });

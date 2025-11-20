@@ -131,7 +131,7 @@ def send_request_sync(payload):
         keys_to_try = list(API_KEYS)
         for _ in range(len(keys_to_try)):
             key = next(API_KEY_CYCLE)
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key={key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent?key={key}"
             try:
                 response = requests.post(url, headers=headers, json=payload, timeout=300)
                 
@@ -284,6 +284,7 @@ def generate_image():
 
         print(f"🎨 이미지 생성 시작: {prompt[:50]}... IP={get_client_ip()} 시간={get_korean_time().strftime('%Y-%m-%d %H:%M:%S')}")
         aspect_ratio = request.form.get('aspect_ratio', 'auto').strip()
+        image_size = request.form.get('image_size', '1K').strip()
 
         parts = [{"text": f"Image generation prompt: {prompt}"}]
         uploaded_images = []
@@ -328,10 +329,19 @@ def generate_image():
                         return jsonify({'error': f'파일 처리 중 오류가 발생했습니다: {file.filename}'}), 400
 
         generation_config = {"maxOutputTokens": 4000, "temperature": 1}
-        # Conditionally add imageConfig if aspect_ratio is not 'auto'
+        # Conditionally add imageConfig if aspect_ratio is not 'auto' or image_size is provided
         allowed_ratios = {"1:1","2:3","3:2","3:4","4:3","4:5","5:4","9:16","16:9","21:9"}
+        allowed_sizes = {"1K", "2K", "4K"}
+        
+        image_config = {}
         if aspect_ratio and aspect_ratio.lower() != 'auto' and aspect_ratio in allowed_ratios:
-            generation_config["imageConfig"] = {"aspectRatio": aspect_ratio}
+            image_config["aspectRatio"] = aspect_ratio
+        
+        if image_size and image_size in allowed_sizes:
+            image_config["imageSize"] = image_size
+        
+        if image_config:
+            generation_config["imageConfig"] = image_config
 
         payload = {
             "contents": [{"role": "user", "parts": parts}],
