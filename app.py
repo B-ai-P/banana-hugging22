@@ -285,6 +285,7 @@ def generate_image():
         print(f"🎨 이미지 생성 시작: {prompt[:50]}... IP={get_client_ip()} 시간={get_korean_time().strftime('%Y-%m-%d %H:%M:%S')}")
         aspect_ratio = request.form.get('aspect_ratio', 'auto').strip()
         image_size = request.form.get('image_size', '1K').strip()
+        google_search = request.form.get('google_search', 'off').strip()
 
         parts = [{"text": f"Image generation prompt: {prompt}"}]
         uploaded_images = []
@@ -328,32 +329,46 @@ def generate_image():
                         print(f"❌ 파일 처리 오류: {e}")
                         return jsonify({'error': f'파일 처리 중 오류가 발생했습니다: {file.filename}'}), 400
 
-        generation_config = {"maxOutputTokens": 4000, "temperature": 1}
-        # Conditionally add imageConfig if aspect_ratio is not 'auto' or image_size is provided
+        # Generation Config 설정
+        generation_config = {
+            "temperature": 1,
+            "topP": 0.95,
+            "maxOutputTokens": 32768,
+            "responseModalities": ["IMAGE"]
+        }
+        
+        # ImageConfig 설정
         allowed_ratios = {"1:1","2:3","3:2","3:4","4:3","4:5","5:4","9:16","16:9","21:9"}
         allowed_sizes = {"1K", "2K", "4K"}
         
-        image_config = {}
+        image_config = {
+            "outputMimeType": "image/png"
+        }
+        
         if aspect_ratio and aspect_ratio.lower() != 'auto' and aspect_ratio in allowed_ratios:
             image_config["aspectRatio"] = aspect_ratio
         
         if image_size and image_size in allowed_sizes:
             image_config["imageSize"] = image_size
         
-        if image_config:
-            generation_config["imageConfig"] = image_config
+        generation_config["imageConfig"] = image_config
 
+        # Payload 구성
         payload = {
             "contents": [{"role": "user", "parts": parts}],
             "generationConfig": generation_config,
             "safetySettings": [
-                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "OFF"},
                 {"category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "OFF"},
-                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "OFF"},
                 {"category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "OFF"},
-                {"category": "HARM_CATEGORY_CIVIC_INTEGRITY", "threshold": "OFF"}
+                {"category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "OFF"},
+                {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "OFF"}
             ]
         }
+        
+        # Google Search 활성화시 tools 추가
+        if google_search == 'on':
+            payload["tools"] = [{"googleSearch": {}}]
+            print(f"🔍 Google Search 활성화")
 
         try:
             data = send_request_sync(payload)

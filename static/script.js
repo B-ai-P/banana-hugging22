@@ -427,3 +427,41 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Google Search 선택 UI
+document.addEventListener('DOMContentLoaded', function() {
+    const googleSearchSelector = document.getElementById('googleSearchSelector');
+    const googleSearchToggle = document.getElementById('googleSearchToggle');
+    const googleSearchMenu = document.getElementById('googleSearchMenu');
+    const googleSearchInput = document.getElementById('google_search');
+
+    if (!googleSearchSelector || !googleSearchToggle || !googleSearchMenu || !googleSearchInput) return;
+
+    // 기본값: OFF
+    googleSearchInput.value = 'off';
+    googleSearchToggle.textContent = '검색: OFF';
+
+    // 토글 버튼 클릭 시 메뉴 열기/닫기
+    googleSearchToggle.addEventListener('click', function(e) {
+        e.stopPropagation();
+        googleSearchSelector.classList.toggle('open');
+    });
+
+    // 리스트 항목 클릭 시 값 반영
+    googleSearchMenu.addEventListener('click', function(e) {
+        const item = e.target.closest('li');
+        if (!item) return;
+        const value = item.dataset.value;
+
+        googleSearchInput.value = value;
+        googleSearchToggle.textContent = '검색: ' + value.toUpperCase();
+        googleSearchSelector.classList.remove('open');
+    });
+
+    // 바깥 클릭 시 닫기
+    document.addEventListener('click', function(e) {
+        if (!googleSearchSelector.contains(e.target)) {
+            googleSearchSelector.classList.remove('open');
+        }
+    });
+});
