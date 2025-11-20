@@ -137,6 +137,10 @@ def send_request_sync(payload):
                 
                 if response.status_code == 400:
                     data = response.json()
+                    print(f"🚨 400 에러 상세:")
+                    print(f"   응답: {json.dumps(data, indent=2, ensure_ascii=False)}")
+                    print(f"   Payload: {json.dumps(payload, indent=2, ensure_ascii=False)}")
+                    
                     if "error" in data:
                         details = data["error"].get("details", [])
                         if any(d.get("reason") == "API_KEY_INVALID" for d in details):
